@@ -1,0 +1,183 @@
+
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+            text-align: center;
+            padding: 50px;
+            color: #333;
+        }
+        .logo {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            margin: auto;
+        }
+        h2, h3, h4 {
+            color: #2c3e50;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        .register {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #2980b9, #3498db);
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .register:hover {
+            background: linear-gradient(45deg, #2471a3, #2e86c1);
+            transform: scale(1.05);
+        }
+        .divider {
+            border: none;
+            height: 2px;
+            background: #ddd;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <img src="logo.jpeg" alt="College Logo" class="logo">
+        <h2>Welcome to College Club Registration</h2>
+        <h4>Please fill in your details below.</h4>
+        <hr class="divider">
+        <form id="registrationForm">
+            <div>
+                <h3 style="font-weight: 800;">Personal Information</h3>
+                <label for="fname">Full Name:</label>
+                <input type="text" id="fname" name="fname" required>
+                <label for="studid">Student ID Number:</label>
+                <input type="text" id="studid" name="studid" required>
+                <label for="grlev">Grade/Level:</label>
+                <input type="text" id="grlev" name="grlev" required>
+            </div>
+            <hr class="divider">
+            <div>
+                <h3 style="font-weight: 800;">Contact Information</h3>
+                <label for="maill">Email Address:</label>
+                <input type="email" id="maill" name="maill" required>
+                <label for="phno">Phone Number:</label>
+                <input type="number" id="phno" name="phno" required>
+            </div>
+            <hr class="divider">
+            <div>
+                <h3 style="font-weight: 800;">Club Selection</h3>
+                <label for="clubs">Select your club:</label>
+                <select name="clubs" id="clubs" required>
+                    <option value="">Select your club...</option>
+                    <option value="Sports">Sports Club</option>
+                    <option value="Media">Media Club</option>
+                    <option value="Fashion">Fashion Club</option>
+                    <option value="Dance">Dance Club</option>
+                    <option value="Singing">Singing Club</option>
+                </select>
+            </div>
+            <hr class="divider">
+            <div>
+                <h3>✅Consent and Agreement</h3>
+                <label>
+                    <input type="checkbox" id="che1" name="consent" required>
+                    I consent to join the selected club and agree to the terms and conditions.
+                </label>
+            </div>
+            <button type="submit" class="register">Register</button>
+        </form>
+    </div>
+
+<script>
+    document.getElementById("registrationForm").addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const selectedClub = document.getElementById("clubs").value;
+    
+    if (!selectedClub) {
+        alert("Please select a club.");
+        return;
+    }
+
+    const studentData = {
+        fname: document.getElementById("fname").value,
+        studid: document.getElementById("studid").value,
+        grlev: document.getElementById("grlev").value,
+        maill: document.getElementById("maill").value,
+        phno: document.getElementById("phno").value,
+        club_id: parseInt(selectedClub, 10), // ✅ Convert to integer
+        consent: document.getElementById("che1").checked
+    };
+
+    try {
+        const response = await fetch("http://localhost:5000/students", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(studentData)
+        });
+
+        const result = await response.json();
+        alert(result.message);
+
+        if (response.ok) {
+            window.location.href = "index.html";
+        }
+    } catch (error) {
+        console.error("Error registering student:", error);
+        alert("Registration failed. Try again!");
+    }
+});
+
+// ✅ Fix: Populate Clubs Dropdown Correctly
+document.addEventListener("DOMContentLoaded", async function () {
+    const clubDropdown = document.getElementById("clubs");
+
+    try {
+        const response = await fetch("http://localhost:5000/clubs");
+        const clubs = await response.json();
+        console.log("Fetched Clubs:", clubs); // ✅ Debugging
+
+        if (!Array.isArray(clubs)) {
+            throw new Error("Expected an array but got something else.");
+        }
+
+        clubDropdown.innerHTML = '<option value="">...Select your club...</option>'; // Ensure default option
+
+        clubs.forEach(club => {
+            const option = document.createElement("option");
+            option.value = club.id; // ✅ Use id
+            option.textContent = club.club_name;
+            clubDropdown.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Error fetching clubs:", error);
+    }
+});
+</script>
+</body>
+</html>

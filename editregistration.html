@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Registration</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #002147, #004080);
+            text-align: center;
+            padding: 50px;
+            color: #333;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            margin: auto;
+            text-align: left;
+        }
+        h2 {
+            color: #002147;
+            text-align: center;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 10px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            font-size: 16px;
+        }
+        .buttons-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .update, .delete {
+            width: 48%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+            transition: all 0.3s ease-in-out;
+        }
+        .update {
+            background: #004080;
+            color: white;
+        }
+        .delete {
+            background: #d9534f;
+            color: white;
+        }
+        .update:hover {
+            background: #002147;
+        }
+        .delete:hover {
+            background: #c9302c;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Edit Your Registration</h2>
+        <form id="editForm">
+            <label for="fname">Full Name:</label>
+            <input type="text" id="fname" name="fname" required>
+            <label for="studid">Student ID Number:</label>
+            <input type="text" id="studid" name="studid" required readonly>
+            <label for="grlev">Grade/Level:</label>
+            <input type="text" id="grlev" name="grlev" required>
+            <label for="maill">Email Address:</label>
+            <input type="email" id="maill" name="maill" required>
+            <label for="phno">Phone Number:</label>
+            <input type="tel" id="phno" name="phno" required>
+            <label for="clubs">Select your club:</label>
+            <select name="clubs" id="clubs" required>
+                <option value="">Select your club</option>
+                <!-- <option value="Sports">Sports</option>
+                <option value="Media">Media</option>
+                <option value="Fashion">Fashion</option>
+                <option value="Dance">Dance</option>
+                <option value="Singing">Singing</option> -->
+            </select>
+            <div class="buttons-container">
+                <button type="submit" class="update">Update</button>
+                <button type="button" class="delete" onclick="deleteRegistration()">Delete</button>
+            </div>
+        </form>
+    </div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", async function () {
+    let studentId = prompt("Enter Student ID to edit:");
+    
+    if (studentId) {
+        try {
+            const response = await fetch(`http://localhost:5000/students/${studentId}`);
+            const data = await response.json();
+
+            if (data.message) {
+                alert(data.message);
+                window.location.replace ("index.html");
+
+            } else {
+                document.getElementById("studid").value = data.studid;
+                document.getElementById("fname").value = data.fname;
+                document.getElementById("grlev").value = data.grlev;
+                document.getElementById("maill").value = data.maill;
+                document.getElementById("phno").value = data.phno;
+                document.getElementById("editForm").dataset.studentId = data.id; // Store student ID
+                document.getElementById("editForm").dataset.registrationId = data.registration_id; // Store Registration ID
+
+                // Fetch clubs and populate dropdown
+                const clubResponse = await fetch("http://localhost:5000/clubs");
+                const clubs = await clubResponse.json();
+                const clubSelect = document.getElementById("clubs");
+                
+                clubs.forEach(club => {
+                    let option = document.createElement("option");
+                    option.value = club.id;
+                    option.textContent = club.club_name;
+                    if (club.id == data.club_id) {
+                        option.selected = true;
+                    }
+                    clubSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching student data:", error);
+           
+        }
+    } 
+    
+});
+
+document.getElementById("editForm").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const studentId = this.dataset.studentId;
+    const registrationId = this.dataset.registrationId;
+
+    const updatedData = {
+        fname: document.getElementById("fname").value,
+        grlev: document.getElementById("grlev").value,
+        maill: document.getElementById("maill").value,
+        phno: document.getElementById("phno").value,
+        club_id: document.getElementById("clubs").value
+    };
+
+    try {
+        const response = await fetch(`http://localhost:5000/registrations/${registrationId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedData)
+        });
+
+        const result = await response.json();
+        alert(result.message);
+        if (response.ok) window.location.href = "index.html";
+    } catch (error) {
+        console.error("Error updating registration:", error);
+    }
+});
+
+async function deleteRegistration() {
+    const registrationId = document.getElementById("editForm").dataset.registrationId;
+
+    if (confirm("Are you sure you want to delete this registration?")) {
+        try {
+            const response = await fetch(`http://localhost:5000/registrations/${registrationId}`, {
+                method: "DELETE"
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            if (response.ok) window.location.href = "index.html";
+        } catch (error) {
+            console.error("Error deleting registration:", error);
+        }
+    }
+}
+</script>
+</body>
+</html>
